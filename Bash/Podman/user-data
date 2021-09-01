@@ -1,0 +1,29 @@
+users:
+  - default
+
+write_files:
+  - path: /home/ubuntu/setup-podman.sh
+    content: |
+      #!/bin/bash
+
+      # Set correct permission on own home folder
+      sudo chown ubuntu:ubuntu .
+      chmod 755 .
+
+      # Install podman
+      . /etc/os-release
+      echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+      curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add -
+      sudo apt update
+      sudo apt install podman fuse-overlayfs -y
+      sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys
+      sudo systemctl --system enable --now podman.socket
+      systemctl --user enable --now podman.socket
+      sudo loginctl enable-linger $USER
+      sudo systemctl enable --now ssh.service
+    permissions: "0755"
+
+runcmd:
+  - sudo cp /etc/skel/.bashrc /home/ubuntu/.bashrc
+  - sudo cp /etc/skel/.bash_logout /home/ubuntu/.bash_logout
+  - sudo cp /etc/skel/.profile /home/ubuntu/.profile
