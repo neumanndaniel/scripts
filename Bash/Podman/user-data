@@ -16,10 +16,15 @@ write_files:
       curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/testing/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
       sudo apt update
       sudo apt install podman fuse-overlayfs -y
+      # root mode configuration
       sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys
       sudo systemctl --system enable --now podman.socket
+      # rootless mode configuration
+      echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf
+      sudo sysctl --system &> /dev/null
       systemctl --user enable --now podman.socket
       sudo loginctl enable-linger $USER
+      # start ssh
       sudo systemctl enable --now ssh.service
     permissions: "0755"
 
