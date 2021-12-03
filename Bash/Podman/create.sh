@@ -15,12 +15,19 @@ else
   podman system connection add $INSTANCE_NAME --identity ~/.ssh/id_rsa  ssh://ubuntu@${IP}/run/user/1000/podman/podman.sock
 fi
 
+IP_CONFIG_EXISTS=$(cat /private/etc/hosts | grep -c "$IP")
+if [[ $IP_CONFIG_EXISTS -eq 0 ]]; then
+  echo "$IP $INSTANCE_NAME" | sudo tee -a /private/etc/hosts
+fi
+
 # List of volume mounts that Docker for Desktop also mounts per default.
 multipass mount /Users $INSTANCE_NAME
 multipass mount /Volumes $INSTANCE_NAME
 multipass mount /private $INSTANCE_NAME
 multipass mount /tmp $INSTANCE_NAME
 multipass mount /var/folders $INSTANCE_NAME
+
+multipass restart $INSTANCE_NAME
 
 multipass list
 echo "#######################"

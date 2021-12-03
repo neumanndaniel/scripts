@@ -32,3 +32,8 @@ runcmd:
   - sudo cp /etc/skel/.bashrc /home/ubuntu/.bashrc
   - sudo cp /etc/skel/.bash_logout /home/ubuntu/.bash_logout
   - sudo cp /etc/skel/.profile /home/ubuntu/.profile
+  - echo "192.168.64.1 docker.for.mac.localhost" | sudo tee -a /etc/cloud/templates/hosts.debian.tmpl
+
+bootcmd:
+  - printf "[Resolve]\nDNS=1.1.1.1\nFallbackDNS=1.0.0.1" > /etc/systemd/resolved.conf
+  - [systemctl, restart, systemd-resolved]
