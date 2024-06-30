@@ -1,0 +1,35 @@
+.create table ActivityLogs (
+    TimeGenerated: datetime, Location: string, Level: string,
+    ResourceId: string, OperationName: string, Category: string,
+    ResultType: string, ResultSignature: string, DurationMs: int,
+    CallerIpAddress: string, CorrelationId: string, Identity: dynamic,
+    Properties: dynamic, RawRecord: dynamic
+    )
+
+.create table ActivityLogsRawRecords (Records: dynamic)
+
+.alter-merge table ActivityLogsRawRecords policy retention softdelete = 0d
+
+.create table ActivityLogsRawRecords ingestion json mapping 'ActivityLogsRawRecordsMapping' '[{"column":"Records","Properties":{"path":"$.records"}}]'
+
+.create function ActivityLogRecordsExpand() {
+        ActivityLogsRawRecords
+        | mv-expand events = Records
+        | project
+            TimeGenerated = todatetime(events['time']),
+            Location = tostring(events.RoleLocation),
+            Level = tostring(events.level),
+            ResourceId = tostring(events.resourceId),
+            OperationName = tostring(events.operationName),
+            Category = tostring(events.category),
+            ResultType = tostring(events.resultType),
+            ResultSignature = tostring(events.resultSignature),
+            DurationMs = toint(events.durationMs),
+            CallerIpAddress = tostring(events.callerIpAddress),
+            CorrelationId = tostring(events.correlationId),
+            Identity = events.identity,
+            Properties = events.properties,
+            RawRecord = events
+    }
+
+.alter table ActivityLogs policy update @'[{"Source": "ActivityLogsRawRecords", "Query": "ActivityLogRecordsExpand()", "IsEnabled": "True", "IsTransactional": true}]'

@@ -1,0 +1,29 @@
+.create table DiagnosticLogs (
+    TimeGenerated: datetime, ResourceId: string, OperationName: string,
+    OperationVersion: string, Category: string, CorrelationId: string,
+    Result: string, Properties: dynamic, RawRecord: dynamic
+    )
+
+.create table DiagnosticRawRecords (Records: dynamic)
+
+.alter-merge table DiagnosticRawRecords policy retention softdelete = 0d
+
+.create table DiagnosticRawRecords ingestion json mapping 'DiagnosticRawRecordsMapping' '[{"column":"Records","Properties":{"path":"$.records"}}]'
+
+.create function DiagnosticLogsExpand() {
+        DiagnosticRawRecords
+        | mv-expand events = Records
+        | where isnotempty(events.operationName)
+        | project
+            TimeGenerated = todatetime(events['time']),
+            ResourceId = tostring(events.resourceId),
+            OperationName = tostring(events.operationName),
+            OperationVersion = tostring(events.operationVersion),
+            Category = tostring(events.category),
+            CorrelationId = tostring(events.correlationId),
+            Result = tostring(events.resultType),
+            Properties = events.properties,
+            RawRecord = events
+    }
+
+.alter table DiagnosticLogs policy update @'[{"Source": "DiagnosticRawRecords", "Query": "DiagnosticLogsExpand()", "IsEnabled": "True", "IsTransactional": true}]'

@@ -1,0 +1,30 @@
+.create table DiagnosticMetrics (
+    TimeGenerated: datetime, ResourceId: string, MetricName: string,
+    Count: int, Total: double, Minimum: double,
+    Maximum: double, Average: double, TimeGrain: string
+    )
+
+// Optionally, you can create a table to store raw records, if you have not done it yet as part of the Diagnostic_Logs.kql file.
+// .create table DiagnosticRawRecords (Records: dynamic)
+
+// .alter-merge table DiagnosticRawRecords policy retention softdelete = 0d
+
+// .create table DiagnosticRawRecords ingestion json mapping 'DiagnosticRawRecordsMapping' '[{"column":"Records","Properties":{"path":"$.records"}}]'
+
+.create function DiagnosticMetricsExpand() {
+        DiagnosticRawRecords
+        | mv-expand events = Records
+        | where isnotempty(events.metricName)
+        | project
+            TimeGenerated = todatetime(events['time']),
+            ResourceId = tostring(events.resourceId),
+            MetricName = tostring(events.metricName),
+            Count = toint(events['count']),
+            Total = todouble(events.total),
+            Minimum = todouble(events.minimum),
+            Maximum = todouble(events.maximum),
+            Average = todouble(events.average),
+            TimeGrain = tostring(events.timeGrain)
+    }
+
+.alter table DiagnosticMetrics policy update @'[{"Source": "DiagnosticRawRecords", "Query": "DiagnosticMetricsExpand()", "IsEnabled": "True", "IsTransactional": true}]'
