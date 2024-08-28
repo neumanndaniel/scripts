@@ -1,0 +1,35 @@
+.create table ContainerLogs (
+    TimeGenerated: datetime, Region: string, PodNamespace: string, PodName: string, ContainerName: string, LogSource: string, LogMessage: dynamic,
+    ContainerImage: string, ContainerImageDigest: string, PodId: guid, ContainerId: string,
+    Environment: string, Cluster: string, Computer: string, NodeIp: string
+    )
+
+.create-or-alter table FluentBitLogs ingestion json mapping "FluentBitMapping"
+    ```[
+    {"column": "TimeGenerated", "datatype": "datetime", "Properties": {"Path": "$.log.TimeGenerated"}},
+    {"column": "Region", "datatype": "string", "Properties": {"Path": "$.log.Region"}},
+    {"column": "PodNamespace", "datatype": "string", "Properties": {"Path": "$.log.PodNamespace"}},
+    {"column": "PodName", "datatype": "string", "Properties": {"Path": "$.log.PodName"}},
+    {"column": "ContainerName", "datatype": "string", "Properties": {"Path": "$.log.ContainerName"}},
+    {"column": "LogSource", "datatype": "string", "Properties": {"Path": "$.log.LogSource"}},
+    {"column": "LogMessage", "datatype": "dynamic", "Properties": {"Path": "$.log.LogMessage"}},
+    {"column": "ContainerImage", "datatype": "string", "Properties": {"Path": "$.log.ContainerImage"}},
+    {"column": "ContainerImageDigest", "datatype": "string", "Properties": {"Path": "$.log.ContainerImageDigest"}},
+    {"column": "PodId", "datatype": "guid", "Properties": {"Path": "$.log.PodId"}},
+    {"column": "ContainerId", "datatype": "string", "Properties": {"Path": "$.log.ContainerId"}},
+    {"column": "Environment", "datatype": "string", "Properties": {"Path": "$.log.Environment"}},
+    {"column": "Cluster", "datatype": "string", "Properties": {"Path": "$.log.Cluster"}},
+    {"column": "Computer", "datatype": "string", "Properties": {"Path": "$.log.Computer"}},
+    {"column": "NodeIp", "datatype": "string", "Properties": {"Path": "$.log.NodeIp"}}
+    ]```
+
+.alter database Kubernetes policy ingestionbatching
+```
+{
+"MaximumBatchingTimeSpan": "00:00:10",
+"MaximumNumberOfItems": 500,
+"MaximumRawDataSizeMB": 1024
+}
+```
+
+.add database Kubernetes ingestors ('aadapp=<Application_ID>;<Tenant_ID>')
