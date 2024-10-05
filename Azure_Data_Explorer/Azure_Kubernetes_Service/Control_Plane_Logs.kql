@@ -1,0 +1,25 @@
+.create table ControlPlaneLogs (
+    TimeGenerated: datetime, Category: string, ResourceId: string,
+    LogSource: string, Pod: string, ContainerId: string, LogMessage: dynamic
+    )
+
+.create table ControlPlaneLogsRawRecords (Records: dynamic)
+
+.alter-merge table ControlPlaneLogsRawRecords policy retention softdelete = 0d
+
+.create table ControlPlaneLogsRawRecords ingestion json mapping 'ControlPlaneLogsRawRecordsMapping' '[{"column":"Records","Properties":{"path":"$.records"}}]'
+
+.create function ControlPlaneLogRecordsExpand() {
+        ControlPlaneLogsRawRecords
+        | mv-expand events = Records
+        | project
+            TimeGenerated = todatetime(events['time']),
+            Category = tostring(events.category),
+            ResourceId = tostring(events.resourceId),
+            LogSource = tostring(events.properties.stream),
+            Pod = tostring(events.properties.pod),
+            ContainerId = tostring(events.properties.containerID),
+            LogMessage = parse_json(tostring(events.properties.log))
+    }
+
+.alter table ControlPlaneLogs policy update @'[{"Source": "ControlPlaneLogsRawRecords", "Query": "ControlPlaneLogRecordsExpand()", "IsEnabled": "True", "IsTransactional": true}]'
