@@ -1,0 +1,40 @@
+.alter database MDfC policy streamingingestion enable
+
+.create table MDfCRawRecords (Records: dynamic)
+
+.create table MDfCRawRecords ingestion json mapping 'MDfCRawRecordsMapping' '[{"column":"Records","Properties":{"path":"$"}}]'
+
+.create function SecurityAlertRecordsExpand() {
+        MDfCRawRecords
+        | extend events = Records
+        | where isnotnull(events.Severity) and isnotnull(events.SystemAlertId)
+        | project
+            TimeGenerated = todatetime(events.TimeGenerated),
+            StartTimeUtc = todatetime(events.StartTimeUtc),
+            EndTimeUtc = todatetime(events.EndTimeUtc),
+            Status = tostring(events.Status),
+            Severity = tostring(events.Severity),
+            CompromisedEntity = tostring(events.CompromisedEntity),
+            Intent = tostring(events.Intent),
+            AlertType = tostring(events.AlertType),
+            AlertName = tostring(events.AlertDisplayName),
+            AlertDescription = tostring(events.Description),
+            AlertId = tostring(events.SystemAlertId),
+            VendorName = tostring(events.VendorName),
+            ResourceId = tostring(events.AzureResourceId),
+            Properties = events.ExtendedProperties,
+            Link = tostring(events.AlertUri),
+            Incident = tobool(events.IsIncident)
+    }
+
+.create table MDfCSecurityAlerts (
+    TimeGenerated: datetime, StartTimeUtc: datetime, EndTimeUtc: datetime,
+    Status: string, Severity: string, CompromisedEntity: string,
+    Intent: string, AlertType: string, AlertName: string, AlertDescription: string,
+    AlertId: string, VendorName: string, ResourceId: string, Properties: dynamic,
+    Link: string, Incident: bool
+    )
+
+.alter-merge table MDfCRawRecords policy retention softdelete = 0d
+
+.alter table MDfCSecurityAlerts policy update @'[{"Source": "MDfCRawRecords", "Query": "SecurityAlertRecordsExpand()", "IsEnabled": "True", "IsTransactional": true}]'
