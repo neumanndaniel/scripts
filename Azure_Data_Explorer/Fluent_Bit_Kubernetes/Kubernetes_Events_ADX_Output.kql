@@ -1,0 +1,30 @@
+.create table KubeEvents (
+    TimeGenerated: datetime, Namespace: string, Name: string, Kind: string, ApiVersion: string, KubeEventType: string, Action: string,
+    Reason: string, Message: string, Count: string, CreationTimestamp: datetime, FirstSeen: datetime, LastSeen: datetime,
+    SourceComponent: string, SourceComputer: string, ReportingComponent: string, ReportingComputer: string,
+    Cluster: string, Region: string, Environment: string
+    )
+
+.create-or-alter table KubeEvents ingestion json mapping "FluentBitMappingEvents"
+    ```[
+    {"column": "TimeGenerated", "datatype": "datetime", "Properties": {"Path": "$.TimeGenerated"}},
+    {"column": "Namespace", "datatype": "string", "Properties": {"Path": "$.log.Namespace"}},
+    {"column": "Name", "datatype": "string", "Properties": {"Path": "$.log.Name"}},
+    {"column": "Kind", "datatype": "string", "Properties": {"Path": "$.log.Kind"}},
+    {"column": "ApiVersion", "datatype": "string", "Properties": {"Path": "$.log.ApiVersion"}},
+    {"column": "KubeEventType", "datatype": "string", "Properties": {"Path": "$.log.KubeEventType"}},
+    {"column": "Action", "datatype": "string", "Properties": {"Path": "$.log.Action"}},
+    {"column": "Reason", "datatype": "string", "Properties": {"Path": "$.log.Reason"}},
+    {"column": "Message", "datatype": "string", "Properties": {"Path": "$.log.Message"}},
+    {"column": "Count", "datatype": "string", "Properties": {"Path": "$.log.Count"}},
+    {"column": "CreationTimestamp", "datatype": "datetime", "Properties": {"Path": "$.log.CreationTimestamp"}},
+    {"column": "FirstSeen", "datatype": "datetime", "Properties": {"Path": "$.log.FirstSeen"}},
+    {"column": "LastSeen", "datatype": "datetime", "Properties": {"Path": "$.log.LastSeen"}},
+    {"column": "SourceComponent", "datatype": "string", "Properties": {"Path": "$.log.SourceComponent"}},
+    {"column": "SourceComputer", "datatype": "string", "Properties": {"Path": "$.log.SourceComputer"}},
+    {"column": "ReportingComponent", "datatype": "string", "Properties": {"Path": "$.log.ReportingComponent"}},
+    {"column": "ReportingComputer", "datatype": "string", "Properties": {"Path": "$.log.ReportingComputer"}},
+    {"column": "Cluster", "datatype": "string", "Properties": {"Path": "$.log.Cluster"}},
+    {"column": "Region", "datatype": "string", "Properties": {"Path": "$.log.Region"}},
+    {"column": "Environment", "datatype": "string", "Properties": {"Path": "$.log.Environment"}},
+    ]```
